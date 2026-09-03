@@ -1,0 +1,10 @@
+{
+  "name": "LedgerGuard - discrepancy intake",
+  "active": false,
+  "nodes": [
+    {"parameters": {"path": "discrepancy-intake", "httpMethod": "POST"}, "name": "Discrepancy webhook", "type": "n8n-nodes-base.webhook", "typeVersion": 2, "position": [260, 300]},
+    {"parameters": {"method": "POST", "url": "={{$env.RAG_SERVICE_URL}}/query", "sendBody": true, "specifyBody": "json", "jsonBody": "={\"query\": $json.details + \" policy\", \"top_k\": 4}"}, "name": "Fetch policy context", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4, "position": [520, 300]},
+    {"parameters": {"mode": "runOnceForAllItems", "jsCode": "return items.map(item => ({json: {...item.json, recommendation: 'escalate', severity: 0.8, explanation: 'Review required under policy context'}}));"}, "name": "Decision placeholder", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [780, 300]}
+  ],
+  "connections": {"Discrepancy webhook": {"main": [[{"node": "Fetch policy context", "type": "main", "index": 0}]]}, "Fetch policy context": {"main": [[{"node": "Decision placeholder", "type": "main", "index": 0}]]}}
+}

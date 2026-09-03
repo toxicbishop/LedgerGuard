@@ -1,0 +1,1 @@
+{"name":"LedgerGuard - policy RAG call","active":false,"nodes":[{"name":"Policy query","type":"n8n-nodes-base.httpRequest","typeVersion":4,"parameters":{"method":"POST","url":"={{$env.RAG_SERVICE_URL}}/query","sendBody":true,"specifyBody":"json","jsonBody":"={\"query\": $json.details}"},"position":[300,300]}],"connections":{}}
