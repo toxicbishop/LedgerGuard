@@ -1,0 +1,16 @@
+[
+  {
+    "event_id": "demo-evt-001",
+    "schema_version": "1.0",
+    "detected_at": "2026-09-03T12:00:00Z",
+    "branch_id": "branch-a",
+    "gateway_id": "gateway-01",
+    "transaction_id": "txn-1001",
+    "type": "amount_drift",
+    "expected_amount": 125.0,
+    "observed_amount": 120.0,
+    "currency": "USD",
+    "details": "Gateway amount differs from canonical ledger amount",
+    "trace_id": "trace-demo-001"
+  }
+]

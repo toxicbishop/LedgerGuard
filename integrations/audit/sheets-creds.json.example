@@ -1,0 +1,8 @@
+{
+  "type": "service_account",
+  "project_id": "replace-me",
+  "private_key_id": "replace-me",
+  "private_key": "replace-me",
+  "client_email": "replace-me",
+  "client_id": "replace-me"
+}
