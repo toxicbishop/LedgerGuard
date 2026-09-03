@@ -1,0 +1,63 @@
+# ---------- Secrets / env ----------
+.env
+.env.local
+*.env
+!.env.example
+**/creds/
+**/*_creds.json
+**/*-creds.json
+!*-creds.json.example
+!*_creds.json.example
+**/*credentials*.json
+**/*.pem
+**/*.key
+
+# ---------- Go (reconciliation-engine) ----------
+**/bin/
+services/reconciliation-engine/*.exe
+services/reconciliation-engine/*.test
+services/reconciliation-engine/*.out
+services/reconciliation-engine/vendor/
+
+# ---------- Python (policy-rag-service, dashboard, integrations) ----------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# ---------- Node / n8n ----------
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.n8n/
+services/event-bridge/node_modules/
+
+# ---------- Docker / infra volumes ----------
+**/postgres_data/
+**/cassandra_data/
+**/n8n_data/
+docker-compose.override.yml
+
+# ---------- Mock / generated data & audit output ----------
+data/fixtures/generated/
+data/fixtures/*.csv
+integrations/audit/*.csv
+integrations/audit/*.local.json
+
+# ---------- IDE / OS ----------
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# ---------- Misc ----------
+*.bak
+*.tmp
+dist/
+build/

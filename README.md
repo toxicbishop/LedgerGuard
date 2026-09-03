@@ -11,6 +11,14 @@ LedgerGuard connects a deterministic distributed-ledger reconciliation engine to
 
 ## Quick start
 
+Using Make (recommended):
+
+```bash
+make up
+```
+
+Or manually:
+
 ```bash
 cp .env.example .env
 docker compose up --build
@@ -27,15 +35,31 @@ The local stack exposes:
 | Postgres | `localhost:5432` | Discrepancy and audit persistence |
 | Kafka | `localhost:9092` | Event transport |
 
-The Go reconciler is scaffolded separately and can be run locally with `go run ./cmd/reconciler`. The compose profile `engine` builds and runs it when Docker is available.
+The Go reconciler is scaffolded separately and can be run locally with `cd services/reconciliation-engine; go run ./cmd/reconciler`. The compose profile `engine` builds and runs it when Docker is available.
+
+## Repository Structure
+
+```text
+├── services/                  # Deployable microservices (Docker)
+│   ├── reconciliation-engine/ # Go matching & consensus engine
+│   ├── policy-rag-service/    # FastAPI policy retrieval API
+│   ├── event-bridge/          # Kafka to n8n HTTP bridge
+│   └── dashboard/             # Streamlit observability UI
+├── workflows/                 # n8n workflow definitions
+├── integrations/              # Action adapters (Slack, Telegram, Audit)
+├── data/
+│   ├── policies/              # Grounding documents (SOPs, thresholds)
+│   └── fixtures/              # Mock transactions and seed data
+└── docs/                      # Architecture and design specifications
+```
 
 ## Event contract
 
-The canonical event is documented in `reconciliation-engine/internal/events/discrepancy.go`. Producers must publish JSON to `discrepancy.flagged`; consumers must treat `event_id` as the idempotency key.
+The canonical event is documented in `services/reconciliation-engine/internal/events/discrepancy.go`. Producers must publish JSON to `discrepancy.flagged`; consumers must treat `event_id` as the idempotency key.
 
 ## Demo flow
 
-1. Publish a transaction pair or use `mock-data/generate_transactions.py`.
+1. Publish a transaction pair or use `data/fixtures/generate-transactions.py` (or run `make seed`).
 2. The reconciler emits a `discrepancy.flagged` event.
 3. The bridge forwards the event to the n8n intake webhook.
 4. n8n calls `/query`, obtains policy context, and invokes the configured LLM node.

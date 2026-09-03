@@ -1,0 +1,130 @@
+
+services:
+  # ---------- Messaging ----------
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+
+  # ---------- Storage ----------
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: LedgerGuard
+      POSTGRES_USER: LedgerGuard
+      POSTGRES_PASSWORD: LedgerGuard
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  cassandra:
+    image: cassandra:5.0
+    environment:
+      CASSANDRA_CLUSTER_NAME: ledgerguard
+    ports:
+      - "9042:9042"
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'describe cluster' 127.0.0.1 9042 >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 60s
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  # ---------- Reconciliation engine (Go) ----------
+  reconciliation-engine:
+    build: ./services/reconciliation-engine
+    depends_on:
+      kafka:
+        condition: service_started
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+      cassandra:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKERS: kafka:9092
+      POSTGRES_DSN: postgres://LedgerGuard:LedgerGuard@postgres:5432/LedgerGuard?sslmode=disable
+      CASSANDRA_HOSTS: cassandra
+      REDIS_ADDR: redis:6379
+    restart: on-failure
+
+  # ---------- Kafka -> HTTP bridge (feeds n8n) ----------
+  kafka-http-bridge:
+    build: ./services/event-bridge
+    depends_on:
+      - kafka
+      - n8n
+    environment:
+      KAFKA_BROKERS: kafka:9092
+      KAFKA_TOPIC: discrepancy.flagged
+      N8N_WEBHOOK_URL: http://n8n:5678/webhook/discrepancy-intake
+
+  # ---------- Policy RAG service (FastAPI) ----------
+  policy-rag-service:
+    build: ./services/policy-rag-service
+    ports:
+      - "8000:8000"
+    environment:
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      PINECONE_API_KEY: ${PINECONE_API_KEY}
+      PINECONE_INDEX: ledgerguard-policy
+    volumes:
+      - ./data/policies:/app/policy-docs:ro
+
+  # ---------- Agent orchestration ----------
+  n8n:
+    image: n8nio/n8n:latest
+    ports:
+      - "5678:5678"
+    environment:
+      N8N_BASIC_AUTH_ACTIVE: "true"
+      N8N_BASIC_AUTH_USER: ${N8N_USER}
+      N8N_BASIC_AUTH_PASSWORD: ${N8N_PASSWORD}
+      GENERIC_TIMEZONE: Asia/Kolkata
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./workflows:/workflows:ro
+
+  # ---------- Dashboard ----------
+  dashboard:
+    build: ./services/dashboard
+    depends_on:
+      - postgres
+    ports:
+      - "8501:8501"
+    environment:
+      POSTGRES_DSN: postgres://LedgerGuard:LedgerGuard@postgres:5432/LedgerGuard?sslmode=disable
+      GOOGLE_SHEETS_CREDS_PATH: /app/creds/sheets_creds.json
+    volumes:
+      - ./integrations/audit/sheets-creds.json:/app/creds/sheets_creds.json:ro
+
+volumes:
+  postgres_data:
+  cassandra_data:
+  n8n_data:
