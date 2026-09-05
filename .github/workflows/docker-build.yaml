@@ -12,6 +12,8 @@ on:
 permissions:
   contents: read
   packages: write
+  attestations: write   # required for build provenance attestation (build-push-action@v6)
+  id-token: write       # required for OIDC token used in attestation signing
 
 jobs:
   build-and-push:
@@ -39,13 +41,13 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4.3.0   # Node 20 -> 24 compatible
 
       - name: Log in to the Container Registry (GHCR)
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4.6.0           # Node 20 -> 24 compatible
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -53,7 +55,7 @@ jobs:
 
       - name: Extract Docker metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6.2.0        # Node 20 -> 24 compatible
         with:
           images: ghcr.io/${{ github.repository }}/${{ matrix.image }}
           tags: |
@@ -63,7 +65,7 @@ jobs:
             type=sha,format=short
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v6.18.0     # Node 20 -> 24 compatible
         with:
           context: ${{ matrix.context }}
           file: ${{ matrix.file }}
