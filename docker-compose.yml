@@ -107,9 +107,20 @@ services:
       N8N_BASIC_AUTH_USER: ${N8N_USER}
       N8N_BASIC_AUTH_PASSWORD: ${N8N_PASSWORD}
       GENERIC_TIMEZONE: Asia/Kolkata
+      N8N_RUNNERS_ENABLED: "true"
+    command: sh -c "n8n import:workflow --separate --input=/workflows || true; n8n start"
     volumes:
       - n8n_data:/home/node/.n8n
       - ./workflows:/workflows:ro
+
+  audit-writer:
+    build: ./integrations/audit
+    ports:
+      - "8090:8090"
+    environment:
+      AUDIT_PATH: /data/audit.csv
+    volumes:
+      - audit_data:/data
 
   # ---------- Dashboard ----------
   dashboard:
@@ -121,10 +132,13 @@ services:
     environment:
       POSTGRES_DSN: postgres://LedgerGuard:LedgerGuard@postgres:5432/LedgerGuard?sslmode=disable
       GOOGLE_SHEETS_CREDS_PATH: /app/creds/sheets_creds.json
+      AUDIT_LOG_PATH: /app/audit/audit.csv
     volumes:
       - ./integrations/audit/sheets-creds.json:/app/creds/sheets_creds.json:ro
+      - audit_data:/app/audit:ro
 
 volumes:
   postgres_data:
   cassandra_data:
   n8n_data:
+  audit_data:

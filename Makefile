@@ -1,4 +1,4 @@
-.PHONY: help init build up down restart logs logs-engine logs-bridge logs-rag logs-dashboard ps seed test test-rag test-engine clean
+.PHONY: help init build up down restart logs logs-engine logs-bridge logs-rag logs-dashboard ps seed test test-rag test-engine demo clean
 
 .DEFAULT_GOAL := help
 
@@ -46,8 +46,14 @@ test: test-rag test-engine ## Run all unit tests across services
 test-rag: ## Run Policy RAG service unit tests
 	python -c "import sys, pytest; sys.path.insert(0, 'services/policy-rag-service'); sys.exit(pytest.main(['-q', 'services/policy-rag-service/tests']))"
 
-test-engine: ## Run Go reconciliation engine tests
+test-engine: ## Run Go reconciliation engine unit tests
 	go test -C services/reconciliation-engine ./...
+
+demo: ## Print the golden-path verification checklist
+	@echo '[1/4] Services: docker compose up --build'
+	@echo '[2/4] Event: reconciliation-engine publishes demo-evt-001'
+	@echo '[3/4] Audit: inspect audit_data/audit.csv for demo-evt-001'
+	@echo '[4/4] Dashboard: refresh http://localhost:8501 and confirm metrics changed'
 
 clean: ## Stop containers and prune volumes/orphans
 	docker compose down -v --remove-orphans
