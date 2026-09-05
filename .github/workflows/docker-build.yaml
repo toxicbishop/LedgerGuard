@@ -65,7 +65,7 @@ jobs:
             type=sha,format=short
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v6.18.0     # Node 20 -> 24 compatible
+        uses: docker/build-push-action@v7.3.0     # Node 20 -> 24 compatible
         with:
           context: ${{ matrix.context }}
           file: ${{ matrix.file }}
