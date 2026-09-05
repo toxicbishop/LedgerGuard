@@ -15,6 +15,6 @@ jobs:
       - run: pip install -r services/policy-rag-service/requirements.txt
       - run: PYTHONPATH=services/policy-rag-service pytest -q services/policy-rag-service/tests
       - uses: actions/setup-go@v5
-        with: {go-version: '1.22'}
+        with: {go-version: '1.23'}
       - run: go test ./...
         working-directory: services/reconciliation-engine
