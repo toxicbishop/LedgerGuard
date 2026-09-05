@@ -17,3 +17,7 @@ type DiscrepancyEvent struct {
 	Details       string    `json:"details"`
 	TraceID       string    `json:"trace_id"`
 }
+
+func DemoDiscrepancy() DiscrepancyEvent {
+	return DiscrepancyEvent{EventID: "demo-evt-001", SchemaVersion: "1.0", DetectedAt: time.Now().UTC(), BranchID: "branch-a", GatewayID: "gateway-01", TransactionID: "txn-1001", Type: "amount_drift", Expected: 125, Observed: 120, Currency: "USD", Details: "Gateway amount differs from canonical ledger amount", TraceID: "trace-demo-001"}
+}
